@@ -17,8 +17,13 @@ async function loadCategories() {
 
 async function loadTransactions() {
   const res = await fetch('/api/transactions');
-  const transactions = await res.json();
+  
+  if (res.status === 401) {
+    window.location.href = '/login';
+    return;
+  }
 
+  const transactions = await res.json();
   let income = 0, expense = 0;
   const tbody = document.getElementById('tx-table-body');
   tbody.innerHTML = '';
@@ -69,11 +74,16 @@ async function handleFormSubmit(e) {
     description: document.getElementById('tx-desc').value
   };
 
-  await fetch('/api/transactions', {
+  const res = await fetch('/api/transactions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
+
+  if (res.status === 401) {
+    window.location.href = '/login';
+    return;
+  }
 
   document.getElementById('tx-desc').value = '';
   document.getElementById('tx-amount').value = '';
@@ -85,6 +95,11 @@ async function deleteTx(id) {
     await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
     loadTransactions();
   }
+}
+
+async function logoutUser() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login';
 }
 
 function updateChart(categoryData) {
